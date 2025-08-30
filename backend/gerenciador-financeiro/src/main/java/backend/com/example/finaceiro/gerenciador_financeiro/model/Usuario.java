@@ -2,9 +2,9 @@ package backend.com.example.finaceiro.gerenciador_financeiro.model;
 
 import java.util.List;
 import java.util.Collection;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority; //Importa a interface GrantedAuthority do Spring Security que faz parte do sistema de autorização
+import org.springframework.security.core.authority.SimpleGrantedAuthority; //Importa a classe SimpleGrantedAuthority que implementa GrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails; //Importa a interface UserDetails do Spring Security que representa os detalhes do usuário
 
 //Importações necessárias
 import jakarta.persistence.*; //Importa as anotações JPA necessárias
