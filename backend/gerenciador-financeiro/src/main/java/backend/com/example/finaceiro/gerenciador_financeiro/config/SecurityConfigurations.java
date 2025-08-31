@@ -19,28 +19,35 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
+import backend.com.example.finaceiro.gerenciador_financeiro.security.SecurityFilter; // Importe o novo filtro
+import org.springframework.beans.factory.annotation.Autowired; // Importe o Autowired
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // Importe esta classe
+
 @Configuration // Anotação para marcar esta classe como uma classe de configuração do Spring
 @EnableWebSecurity // Anotação para habilitar a configuração de segurança do Spring Security
 public class SecurityConfigurations {
 
-    @Bean // Anotação para marcar este método como um bean gerenciado pelo Spring
+    @Autowired
+    private SecurityFilter securityFilter; // Injeta o filtro de segurança personalizado
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Configuração principal da cadeia de filtros de segurança do Spring
         return http
-                .csrf(csrf -> csrf.disable()) // Desabilita a proteção CSRF, pois usaremos tokens JWT (API stateless)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura a política de sessão para ser sem estado (stateless)
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
-                    // Configura as permissões de acesso para os endpoints
-                    req.requestMatchers(HttpMethod.POST, "/auth/login").permitAll(); // Permite acesso público ao endpoint de login
-                    req.requestMatchers(HttpMethod.POST, "/auth/register").permitAll(); // Permite acesso público ao endpoint de registro
-                    req.anyRequest().authenticated(); // Exige autenticação para todas as outras requisições
+                    req.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
+                    req.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
+                    req.anyRequest().authenticated();
                 })
-                // ADIÇÃO CRÍTICA: Integra a configuração de CORS definida no bean 'corsConfigurationSource'
+                // Diz ao Spring para usar nosso filtro antes do filtro padrão de autenticação
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .build(); // Constrói o objeto SecurityFilterChain
+                .build();
     }
 
-    @Bean // Expõe o AuthenticationManager como um Bean para ser usado no nosso AuthController
+    @Bean // Expõe o AuthenticationManager como um Bean para ser usado no nosso
+          // AuthController
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         // Obtém e retorna o AuthenticationManager padrão do Spring Security
         return configuration.getAuthenticationManager();
@@ -57,9 +64,11 @@ public class SecurityConfigurations {
     public CorsConfigurationSource corsConfigurationSource() {
         // Cria um objeto de configuração de CORS
         CorsConfiguration configuration = new CorsConfiguration();
-        // Define quais origens (endereços de frontend) são permitidas. No nosso caso, apenas o React em localhost:3000
+        // Define quais origens (endereços de frontend) são permitidas. No nosso caso,
+        // apenas o React em localhost:3000
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        // Define quais métodos HTTP (GET, POST, etc.) são permitidos a partir dessas origens
+        // Define quais métodos HTTP (GET, POST, etc.) são permitidos a partir dessas
+        // origens
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // Permite que todos os cabeçalhos (headers) sejam enviados na requisição
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -68,9 +77,10 @@ public class SecurityConfigurations {
 
         // Cria uma fonte de configuração de CORS baseada em URL
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplica as configurações de CORS que definimos acima para todos os endpoints da nossa API ("/**")
+        // Aplica as configurações de CORS que definimos acima para todos os endpoints
+        // da nossa API ("/**")
         source.registerCorsConfiguration("/**", configuration);
-        
+
         // Retorna a fonte de configuração para que o Spring Security a utilize
         return source;
     }

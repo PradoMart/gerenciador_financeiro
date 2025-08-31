@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value; //Importa a anotaçã
 import com.auth0.jwt.JWT; //Importa a classe JWT da biblioteca Auth0 para criação e verificação de tokens JWT
 import com.auth0.jwt.algorithms.Algorithm; //Importa a classe Algorithm para definir o algoritmo de assinatura do token
 import com.auth0.jwt.exceptions.JWTCreationException; //Importa a exceção JWTCreationException
+import com.auth0.jwt.exceptions.JWTVerificationException;
+
 import org.springframework.stereotype.Service; //Importa a anotação Service para marcar a classe como um serviço do Spring
 
 import backend.com.example.finaceiro.gerenciador_financeiro.model.Usuario;
@@ -32,6 +34,20 @@ public class TokenService {
             throw new RuntimeException("Erro ao gerar token JWT", exception); //Lança uma exceção em caso de erro na criação do token
         }
     }
+
+    //Método para validar o token JWT e retornar o assunto (email do usuário)
+    public String getSubject(String tokenJWT) { 
+    try {
+        var algoritmo = Algorithm.HMAC256(secret); //Cria o algoritmo de criptografia HMAC256 com a chave secreta
+        return JWT.require(algoritmo) //Inicia a verificação do token JWT
+                .withIssuer("API Gerenciador Financeiro") //Define o emissor esperado do token
+                .build() //Constrói o verificador de token
+                .verify(tokenJWT) //Verifica o token JWT
+                .getSubject(); //Retorna o assunto do token (email do usuário)
+    } catch (JWTVerificationException exception) {
+        throw new RuntimeException("Token JWT inválido ou expirado!");
+    }
+}
 
     private Instant dataExpiracao() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00")); //Define a data de expiração do token para 2 horas a partir do momento atual

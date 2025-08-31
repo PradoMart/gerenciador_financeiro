@@ -17,4 +17,7 @@ public class Categoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //Gera o valor do ID automaticamente
     private Long id;
     private String nome;
+
+    @Enumerated(EnumType.STRING) //Indica que o campo é um enum e deve ser armazenado como string no banco de dados
+    private TipoTransacao tipo; // Tipo de transação (RECEITA ou DESPESA)
 }
