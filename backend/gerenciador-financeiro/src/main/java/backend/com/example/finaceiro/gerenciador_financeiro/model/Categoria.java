@@ -10,7 +10,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "categorias")
+@Table(name = "categorias", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"nome", "tipo"}) // Define que a combinação de nome e tipo deve ser única
+})
 public class Categoria {
     
     @Id //Indica que o campo é a chave primária

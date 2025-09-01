@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Este componente recebe a lista de transações como uma "prop" (propriedade)
-function ListaTransacoes({ transacoes }) {
+function ListaTransacoes({ transacoes, onExcluir, onEditar }) {
 
     // Função para formatar a data para o padrão brasileiro
     const formatarData = (data) => {
@@ -26,6 +26,8 @@ function ListaTransacoes({ transacoes }) {
                         <th style={{ border: '1px solid #ddd', padding: '8px' }}>Descrição</th>
                         <th style={{ border: '1px solid #ddd', padding: '8px' }}>Categoria</th>
                         <th style={{ border: '1px solid #ddd', padding: '8px' }}>Valor</th>
+
+                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,6 +46,10 @@ function ListaTransacoes({ transacoes }) {
                                 {/* Mudamos a cor do texto com base no tipo da transação */}
                                 <td style={{ border: '1px solid #ddd', padding: '8px', color: transacao.tipo === 'RECEITA' ? 'green' : 'red' }}>
                                     {formatarValor(transacao.valor)}
+                                </td>
+                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                    <button onClick={() => onEditar(transacao)} style={{ marginRight: '5px' }}>Editar</button>
+                                    <button onClick={() => onExcluir(transacao.id)}>Excluir</button>
                                 </td>
                             </tr>
                         ))

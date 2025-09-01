@@ -7,5 +7,5 @@ import backend.com.example.finaceiro.gerenciador_financeiro.model.Transacao;
 import backend.com.example.finaceiro.gerenciador_financeiro.model.Usuario;
 
 public interface TransacaoRepository extends JpaRepository<Transacao, Long> {
-    List<Transacao> findAllByUsuario(Usuario usuario);
+    List<Transacao> findAllByUsuarioOrderByDataDesc(Usuario usuario);
 }
