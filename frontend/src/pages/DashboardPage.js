@@ -3,6 +3,8 @@ import api from '../services/api';
 import FormularioTransacao from '../components/FormularioTransacao';
 import ListaTransacoes from '../components/ListaTransacoes';
 import ModalEdicao from '../components/ModalEdicao';
+import GraficoGastos from '../components/GraficoGastos'; // 1. IMPORTE O NOVO COMPONENTE
+
 
 function DashboardPage() {
     // O estado da lista de transações agora vive aqui, no componente "pai".
@@ -11,6 +13,8 @@ function DashboardPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false); // Controla se o modal está visível
     const [transacaoSelecionada, setTransacaoSelecionada] = useState(null); // Guarda a transação a ser editada
+
+    const [dadosGrafico, setDadosGrafico] = useState([]);
 
     // Usamos useCallback para evitar que a função seja recriada a cada renderização.
     const fetchTransacoes = useCallback(async () => {
@@ -23,10 +27,35 @@ function DashboardPage() {
         }
     }, []);
 
+    const fetchDadosGrafico = useCallback(async () => {
+        try {
+            const response = await api.get('/dashboard/gastos-por-categoria');
+            const formattedData = response.data.map(item => ({
+                name: item.categoria,
+                value: item.totalGasto
+            }));
+            setDadosGrafico(formattedData);
+        } catch (err) {
+            console.error("Erro ao buscar dados do gráfico:", err);
+            // Não definimos um erro aqui para não poluir a tela, mas poderíamos
+        }
+    }, []);
+
     // useEffect para buscar as transações quando a página carrega.
     useEffect(() => {
         fetchTransacoes();
-    }, [fetchTransacoes]);
+        fetchDadosGrafico();
+    }, [fetchTransacoes, fetchDadosGrafico]);
+
+    // Função "orquestradora" que é chamada após uma nova transação ser adicionada
+    const handleTransacaoAdicionada = () => {
+        // Recarrega tanto a lista quanto o gráfico
+        fetchTransacoes();
+
+        // Adicionamos um pequeno delay para dar tempo do backend processar
+        // a nova transação antes de recalcular os totais do gráfico.
+        setTimeout(fetchDadosGrafico, 500);
+    };
 
     const handleExcluirTransacao = async (id) => {
         // Pede uma confirmação ao usuário antes de prosseguir
@@ -38,6 +67,7 @@ function DashboardPage() {
                 // ATUALIZA A LISTA NA TELA:
                 // Cria uma nova lista contendo todas as transações, exceto a que tem o ID que acabamos de excluir.
                 setTransacoes(transacoes.filter(transacao => transacao.id !== id));
+                setTimeout(fetchDadosGrafico, 500);
 
                 alert("Transação excluída com sucesso!");
             } catch (err) {
@@ -59,18 +89,16 @@ function DashboardPage() {
 
     const handleSalvarEdicao = async (id, dadosAtualizados) => {
         try {
-            // Chama o endpoint PUT da nossa API
             const response = await api.put(`/transacoes/${id}`, dadosAtualizados);
-
-            // ATUALIZA A LISTA NA TELA:
-            // Cria uma nova lista, substituindo a transação antiga pela nova (que veio da resposta da API)
             setTransacoes(transacoes.map(t => (t.id === id ? response.data : t)));
 
+            // Também atualiza o gráfico após editar
+            setTimeout(fetchDadosGrafico, 500);
+
             alert("Transação atualizada com sucesso!");
-            handleFecharModalEdicao(); // Fecha o modal
+            handleFecharModalEdicao();
         } catch (err) {
             console.error("Erro ao atualizar transação:", err);
-            // No futuro, podemos exibir este erro dentro do modal
             alert("Falha ao atualizar a transação.");
         }
     };
@@ -79,10 +107,15 @@ function DashboardPage() {
         <div>
             <h1>Bem-vindo ao seu Dashboard Financeiro!</h1>
             <hr />
-            {/* Passamos a função de recarregar como propriedade para o formulário */}
-            <FormularioTransacao onTransacaoAdicionada={fetchTransacoes} />
+            {/* O gráfico agora recebe os dados do estado desta página */}
+            <GraficoGastos data={dadosGrafico} />
+            <hr />
+            
+            {/* O formulário agora chama a função "orquestradora" */}
+            <FormularioTransacao onTransacaoAdicionada={handleTransacaoAdicionada} />
             <hr />
             {error && <p style={{ color: 'red' }}>{error}</p>}
+            
             {/* Passamos a lista de transações como propriedade para a lista */}
             <ListaTransacoes
                 transacoes={transacoes}
