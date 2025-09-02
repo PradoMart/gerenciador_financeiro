@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import FormularioTransacao from '../components/FormularioTransacao';
 import ListaTransacoes from '../components/ListaTransacoes';
@@ -15,6 +16,8 @@ function DashboardPage() {
     const [transacaoSelecionada, setTransacaoSelecionada] = useState(null); // Guarda a transação a ser editada
 
     const [dadosGrafico, setDadosGrafico] = useState([]);
+    
+    const navigate = useNavigate();
 
     // Usamos useCallback para evitar que a função seja recriada a cada renderização.
     const fetchTransacoes = useCallback(async () => {
@@ -103,9 +106,23 @@ function DashboardPage() {
         }
     };
 
+    const handleLogout = () => {
+        // Remove o token do armazenamento local do navegador
+        localStorage.removeItem('authToken');
+
+        // Remove o cabeçalho de autorização das futuras requisições do Axios
+        delete api.defaults.headers.common['Authorization'];
+
+        // Redireciona o usuário para a página de login
+        navigate('/login');
+    };
+
     return (
         <div>
-            <h1>Bem-vindo ao seu Dashboard Financeiro!</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h1>Bem-vindo ao seu Dashboard Financeiro!</h1>
+                <button onClick={handleLogout} style={{ padding: '8px 16px' }}>Sair</button>
+            </div>
             <hr />
             {/* O gráfico agora recebe os dados do estado desta página */}
             <GraficoGastos data={dadosGrafico} />
